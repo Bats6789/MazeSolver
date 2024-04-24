@@ -294,10 +294,14 @@ char *graphToString(Cell_t *cells, size_t width, size_t height) {
 				str[strI + 1] = ' ';
 			}
 
+			if (cells[i].visited == 1) {
+				str[strI] = '*';
+			}
+
 			if (cells[i].start == 1) {
-				str[strI] = 'S';
+				str[strI] = cells[i].visited == 1 ? 's' : 'S';
 			} else if (cells[i].stop == 1) {
-				str[strI] = 'X';
+				str[strI] = cells[i].visited == 1 ? 'x' : 'X';
 			}
 
 			if (x + 1 == width) {
