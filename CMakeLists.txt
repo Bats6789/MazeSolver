@@ -14,4 +14,6 @@ add_library(MazeTools STATIC src/MazeTools.c)
 add_executable(MazeSolver src/main.c)
 
 target_include_directories(MazeSolver PUBLIC include)
+target_include_directories(MazeViewer PUBLIC include)
+target_include_directories(MazeTools PUBLIC include)
 target_link_libraries(MazeSolver MazeViewer MazeTools)
