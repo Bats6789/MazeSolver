@@ -29,43 +29,67 @@ Maze_t createMazeWH(size_t width, size_t height) {
     return maze;
 }
 
-Maze_t createMaze(const char *mazeStr) {
-    Maze_t maze = {0, 0, NULL};
-    size_t len = strlen(mazeStr);
-    size_t count = 0;
+Maze_t createMaze(const char *str) {
+    Maze_t maze = {0, 0, NULL, NULL};
+	size_t strWidth = 1;
+	size_t len = strlen(str);
+	size_t rows = 0;
 
-    maze.str = malloc(sizeof(*maze.str) * len);
-    if (maze.str == NULL) {
-        perror("Failed to allocate maze");
-        exit(EXIT_FAILURE);
-    }
+	for (size_t i = 0; i < len; i += strWidth) {
+		if (str[i] == '\n') {
+			rows += 1;
+			if (strWidth == 1) {
+				maze.width = (i - 1) / 2;
+				strWidth = i + 1;
+			}
+		}
+	}
 
-    for (size_t i = 0; i < len; ++i) {
-        if (mazeStr[i] == '\n') {
-            if (maze.width == 0) {
-                maze.width = count;
+	if (str[len - 2] != '\n') {
+		rows += 1;
+	}
+
+	maze.height = (rows - 1) / 2;
+
+	maze.cells = malloc(sizeof(*maze.cells) * maze.width * maze.height);
+
+    for (size_t y = 0; y < maze.height; ++y) {
+        for (size_t x = 0; x < maze.width; ++x) {
+            size_t i = y * maze.width + x;
+            size_t strI = strWidth * (2 * y + 1) + 2 * x + 1;
+
+			if (str[strI] == '.') {
+				maze.cells[i].visited = 1;
+			} else {
+				maze.cells[i].visited = 0;
+			}
+
+			if (str[strI] == '*') {
+				maze.cells[i].path = 1;
+				maze.cells[i].visited = 1;
+			} else {
+				maze.cells[i].path = 0;
+			}
+
+            if (str[strI] == 'S' ||str[strI] == 's') {
+                maze.cells[i].start = 1;
+                maze.cells[i].stop = 0;
+            } else if (str[strI] == 'X' ||str[strI] == 'x') {
+                maze.cells[i].start = 0;
+                maze.cells[i].stop = 1;
+            } else {
+                maze.cells[i].start = 0;
+                maze.cells[i].stop = 0;
             }
-            maze.height++;
-            continue;
+
+            maze.cells[i].left = str[strI - 1] == '#' ? 1 : 0;
+            maze.cells[i].right = str[strI + 1] == '#' ? 1 : 0;
+            maze.cells[i].top = str[strI - strWidth] == '#' ? 1 : 0;
+            maze.cells[i].bottom = str[strI + strWidth] == '#' ? 1 : 0;
         }
-
-        maze.str[count++] = mazeStr[i];
     }
 
-    if (mazeStr[len - 1] != '\n') {
-        if (maze.width == 0) {
-            maze.width = count;
-        }
-        maze.height++;
-    }
-
-    maze.str[count] = '\0';
-
-    maze.str = realloc(maze.str, sizeof(*maze.str) * count);
-    if (maze.str == NULL) {
-        perror("Failed to allocate maze");
-        exit(EXIT_FAILURE);
-    }
+	maze.str = strdup(str);
 
     return maze;
 }
@@ -521,22 +545,12 @@ Maze_t importMaze(FILE *stream) {
     char c;
     size_t maxSz = 100;
     size_t sz = 0;
-    size_t strWidth = 0;
-    size_t rows = 0;
     Maze_t maze = {0, 0, NULL, NULL};
 
     buf = malloc(sizeof(*buf) * maxSz);
 
     while ((c = fgetc(stream)) != EOF) {
         buf[sz++] = c;
-
-        if (c == '\n') {
-            rows++;
-            if (maze.width == 0) {
-                maze.width = (sz - 1) / 2;
-                strWidth = sz;
-            }
-        }
 
         if (sz >= maxSz) {
             maxSz += 100;
@@ -545,47 +559,10 @@ Maze_t importMaze(FILE *stream) {
     }
 
     buf[sz++] = '\0';
-    maze.height = (rows - 1) / 2;
 
-    maze.cells = malloc(sizeof(*maze.cells) * maze.height * maze.width);
+	maze = createMaze(buf);
 
-    for (size_t y = 0; y < maze.height; ++y) {
-        for (size_t x = 0; x < maze.width; ++x) {
-            size_t i = y * maze.width + x;
-            size_t strI = strWidth * (2 * y + 1) + 2 * x + 1;
-
-			if (buf[strI] == '.') {
-				maze.cells[i].visited = 1;
-			} else {
-				maze.cells[i].visited = 0;
-			}
-
-			if (buf[strI] == '*') {
-				maze.cells[i].path = 1;
-				maze.cells[i].visited = 1;
-			} else {
-				maze.cells[i].path = 0;
-			}
-
-            if (buf[strI] == 'S' || buf[strI] == 's') {
-                maze.cells[i].start = 1;
-                maze.cells[i].stop = 0;
-            } else if (buf[strI] == 'X' || buf[strI] == 'x') {
-                maze.cells[i].start = 0;
-                maze.cells[i].stop = 1;
-            } else {
-                maze.cells[i].start = 0;
-                maze.cells[i].stop = 0;
-            }
-
-            maze.cells[i].left = buf[strI - 1] == '#' ? 1 : 0;
-            maze.cells[i].right = buf[strI + 1] == '#' ? 1 : 0;
-            maze.cells[i].top = buf[strI - strWidth] == '#' ? 1 : 0;
-            maze.cells[i].bottom = buf[strI + strWidth] == '#' ? 1 : 0;
-        }
-    }
-
-    maze.str = realloc(buf, sizeof(*buf) * sz);
+	free(buf);
 
     return maze;
 }

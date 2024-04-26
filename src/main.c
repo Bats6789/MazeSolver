@@ -24,9 +24,9 @@
 /************************************************************************
  *                            STATIC VARS                               *
  ************************************************************************/
-static int quite_flag = 0;    // option to silence output
-static int verbose_flag = 0;  // option to print out everything
-static int input_flag = 0;    // option to read a maze from a file
+static int quite_flag = 0;   // option to silence output
+static int verbose_flag = 0; // option to print out everything
+static int input_flag = 0;   // option to read a maze from a file
 
 /************************************************************************
  *                       FUNCTION DECLARATIONS                          *
@@ -39,18 +39,18 @@ int printError(const char *frmt, ...);
  *                                MAIN                                  *
  ************************************************************************/
 int main(int argc, char *argv[]) {
-    int opt;
-    int opts_index = 0;
-    Maze_t maze;
-    size_t height = DEFAULT_HEIGHT;
-    size_t width = DEFAULT_HEIGHT;
-    Point_t start;
-    Point_t stop;
-    FILE *inFile = NULL;
-    FILE *outFile = stdout;
-    FILE *stepFile = NULL;
+  int opt;
+  int opts_index = 0;
+  Maze_t maze;
+  size_t height = DEFAULT_HEIGHT;
+  size_t width = DEFAULT_HEIGHT;
+  Point_t start;
+  Point_t stop;
+  FILE *inFile = NULL;
+  FILE *outFile = stdout;
+  FILE *stepFile = NULL;
 
-    // clang-format off
+  // clang-format off
 	static struct option long_opts[] = {
 		{"input", required_argument, NULL, 'i'},
 		{"quite", no_argument, &quite_flag, 1},
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 				break;
 
 			case 'i':
-                inFile = fopen(optarg, "w");
+                inFile = fopen(optarg, "r");
                 if (!inFile) {
                     printError("ERROR opening \"%s\": %s", optarg,
                                strerror(errno));
@@ -127,17 +127,19 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-    if (argv[optind] == NULL) {
-        print("Using default options (height = %d, width = %d)\n", height,
-              width);
-    } else if (optind + 2 < argc) {
-        printError("Not enough arguments");
-        return EXIT_FAILURE;
-    } else {
-        height = strtoull(argv[optind++], NULL, 10);
-        width = strtoull(argv[optind++], NULL, 10);
-    }
-	fflush(stdout);
+	if (input_flag == 0) {
+		if (argv[optind] == NULL) {
+			print("Using default options (height = %d, width = %d)\n", height,
+		 width);
+		} else if (optind + 2 < argc) {
+			printError("Not enough arguments");
+			return EXIT_FAILURE;
+		} else {
+			height = strtoull(argv[optind++], NULL, 10);
+			width = strtoull(argv[optind++], NULL, 10);
+		}
+		fflush(stdout);
+	}
 
 	if (input_flag) {
 		maze = importMaze(inFile);
