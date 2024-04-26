@@ -28,7 +28,8 @@ typedef struct {
     union {
         uint32_t walls;
         struct {
-            unsigned blank : 25;
+            unsigned blank : 24;
+			unsigned path : 1;
 			unsigned start : 1;
 			unsigned stop : 1;
             unsigned visited : 1;
@@ -58,5 +59,10 @@ void joinTrees(Tree_t *head, Tree_t *node);
 Tree_t *getHead(Tree_t *tree);
 Point_t pointShift(Point_t point, Direction_t direction);
 void fprintStep(FILE *stream, Maze_t *maze);
+Maze_t importMaze(FILE *stream);
+bool solveMaze(Maze_t maze, Point_t start, Point_t stop);
+bool solveMazeWithSteps(Maze_t maze, Point_t start, Point_t stop, FILE *stream);
+Point_t findStart(Maze_t maze);
+Point_t findStop(Maze_t maze);
 
 #endif /* ifndef __MAZE_TOOLS_H__ */
