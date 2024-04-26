@@ -2,6 +2,6 @@
 A solver for mazes
 
 ## TODO
-- [ ] Maze Solver
-- [ ] Verbose Steps
-- [ ] Write Help
+- [x] Maze Solver
+- [x] Verbose Steps
+- [x] Write Help
