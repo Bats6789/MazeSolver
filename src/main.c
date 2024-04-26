@@ -1,12 +1,19 @@
-/* Name: main.c
- * Auth: Blake Wingard - bats23456789@gmail.com
- * Date: 04/24/2024
- * Desc: The main file for Maze Solving
+/**@file main.c
+ * @brief The main entry point for the program.
+ *
+ * This program solves mazes. It is intended for a maze to be provided, but
+ * this program does have the ability to generate its own maze for
+ * demonstration purposes.
+ *
+ * @author Blake Wingard (bats23456789@gmail.com)
+ * @bug No known bugs.
  */
 
-/************************************************************************
+// clang-format off
+/***************************************************************//*******
  *                              INCLUDES                                *
  ************************************************************************/
+// clang-format on
 #include <getopt.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -15,42 +22,77 @@
 
 #include "MazeTools.h"
 
-/************************************************************************
+// clang-format off
+/***************************************************************//*******
  *                               DEFINES                                *
  ************************************************************************/
+// clang-format on
 #define DEFAULT_HEIGHT 10
 #define DEFAULT_WIDTH 10
 
-/************************************************************************
+// clang-format off
+/**************************************************************//********
  *                            STATIC VARS                               *
  ************************************************************************/
-static int quite_flag = 0;   // option to silence output
-static int verbose_flag = 0; // option to print out everything
-static int input_flag = 0;   // option to read a maze from a file
+// clang-format on
+static int quite_flag = 0;    // option to silence output
+static int verbose_flag = 0;  // option to print out everything
+static int input_flag = 0;    // option to read a maze from a file
 
-/************************************************************************
+// clang-format off
+/***************************************************************//*******
  *                       FUNCTION DECLARATIONS                          *
  ************************************************************************/
+// clang-format on
+/**@brief Prints the help message for the program.
+ *
+ * @return void
+ */
 void help(void);
 
+/**@brief Prints only if quite_flag is not set.
+ *
+ * The primary purpose of this function is to make disabling printing easier.
+ * This is accomplished with the global variable quite_flag. If quite_flag is
+ * set to 1, then no printing occurs.
+ *
+ * @param frmt The format specifier in printf fashion.
+ * @param ... The variables to print based on frmt.
+ * @return The number of items printed.
+ */
 int print(const char *frmt, ...);
+
+/**@brief Prints ERROR only if quite_flag is not set.
+ *
+ * The primary purpose of this function is to make disabling printing easier.
+ * This is accomplished with the global variable quite_flag. If quite_flag is
+ * set to 1, then no printing occurs.
+ * And printing done by this function is done to stderr as opposed to stdout.
+ *
+ * @param frmt The format specifier in printf fashion.
+ * @param ... The variables to print based on frmt.
+ * @return The number of items printed.
+ */
 int printError(const char *frmt, ...);
-/************************************************************************
+
+// clang-format off
+/****************************************************************//******
  *                                MAIN                                  *
  ************************************************************************/
+// clang-format on
 int main(int argc, char *argv[]) {
-  int opt;
-  int opts_index = 0;
-  Maze_t maze;
-  size_t height = DEFAULT_HEIGHT;
-  size_t width = DEFAULT_HEIGHT;
-  Point_t start;
-  Point_t stop;
-  FILE *inFile = NULL;
-  FILE *outFile = stdout;
-  FILE *stepFile = NULL;
+    int opt = 0;
+    int opts_index = 0;
+    Maze_t maze = {0, 0, NULL, NULL};
+    size_t height = DEFAULT_HEIGHT;
+    size_t width = DEFAULT_HEIGHT;
+    Point_t start = {0, 0};
+    Point_t stop = {0, 0};
+    FILE *inFile = NULL;
+    FILE *outFile = stdout;
+    FILE *stepFile = NULL;
 
-  // clang-format off
+    // clang-format off
 	static struct option long_opts[] = {
 		{"input", required_argument, NULL, 'i'},
 		{"quite", no_argument, &quite_flag, 1},
@@ -61,6 +103,7 @@ int main(int argc, char *argv[]) {
 	};
 	// clang format on
 
+	// parse user arguments
 	while ((opt = getopt_long(argc, argv, "hi:qo:v::", long_opts, &opts_index)) != -1) {
 		switch (opt) {
 			case 0: // long opt
@@ -127,6 +170,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	// if no input file is provided, attempt to get the size of the maze
 	if (input_flag == 0) {
 		if (argv[optind] == NULL) {
 			print("Using default options (height = %d, width = %d)\n", height,
@@ -141,6 +185,7 @@ int main(int argc, char *argv[]) {
 		fflush(stdout);
 	}
 
+	// Import or generate maze
 	if (input_flag) {
 		maze = importMaze(inFile);
 		fclose(inFile);
@@ -149,20 +194,24 @@ int main(int argc, char *argv[]) {
 		generateMaze(&maze);
 	}
 
+	// Find critical points
 	start = findStart(maze);
 	stop = findStop(maze);
 
+	// solve maze
 	if (verbose_flag) {
 		solveMazeWithSteps(maze, start, stop, stepFile);
 	} else {
 		solveMaze(maze, start, stop);
 	}
 
+	// output the results
 	free(maze.str);
 	maze.str = graphToString(maze.cells, maze.width, maze.height);
 
 	fprintf(outFile, "%s", maze.str);
 
+	// cleanup
 	if (verbose_flag) {
 		fclose(stepFile);
 	}
@@ -172,11 +221,14 @@ int main(int argc, char *argv[]) {
 	return EXIT_SUCCESS;
 }
 
-/************************************************************************
+// clang-format off
+/*****************************************************************//*****
  *                       FUNCTION DEFINITIONS                           *
  ************************************************************************/
+// clang-format on
 
 void help(void) {
+    // clang-format off
 	puts("Usage:");
 	puts("  MazeSolver                      Generates a 10x10 maze and solves it");
 	puts("  MazeSolver [W] [H]              Generates a maze of size WxH and solves it");
@@ -188,6 +240,7 @@ void help(void) {
 	puts("  -o <file>, --output <file>      Output solved maze to <file>");
 	puts("  -v [file], --verbose [file]     Send each step for solving to <file>");
 	puts("  -h, --help                      Print this message");
+    // clang-format on
 }
 
 int printError(const char *frmt, ...) {
