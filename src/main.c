@@ -108,8 +108,10 @@ int main(int argc, char *argv[]) {
 		switch (opt) {
 			case 0: // long opt
 				break;
+
 			case 'h':
 				help();
+				return EXIT_SUCCESS;
 				break;
 
 			case 'i':
@@ -159,11 +161,12 @@ int main(int argc, char *argv[]) {
 
             case '?':
 				puts("Unrecognized option");
+				help();
                 return EXIT_FAILURE;
                 break;
 
 			default:
-                puts("help");
+				help();
                 return EXIT_FAILURE;
                 break;
 
