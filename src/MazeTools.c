@@ -211,7 +211,7 @@ bool solveMaze(Maze_t maze, Point_t start, Point_t stop) {
         }
     }
 
-    if (start.x < maze.height - 1 && maze.cells[i].right == 0 &&
+    if (start.x < maze.width - 1 && maze.cells[i].right == 0 &&
         maze.cells[i + 1].visited == 0) {
         if (solveMaze(maze, (Point_t){start.x + 1, start.y}, stop)) {
 			maze.cells[i].path = 1;
@@ -261,7 +261,7 @@ bool solveMazeWithSteps(Maze_t maze, Point_t start, Point_t stop, FILE *stream) 
         }
     }
 
-    if (start.x < maze.height - 1 && maze.cells[i].right == 0 &&
+    if (start.x < maze.width - 1 && maze.cells[i].right == 0 &&
         maze.cells[i + 1].visited == 0) {
         if (solveMazeWithSteps(maze, (Point_t){start.x + 1, start.y}, stop, stream)) {
 			maze.cells[i].path = 1;
