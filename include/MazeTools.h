@@ -139,7 +139,7 @@ bool isSameTree(Tree_t *tree1, Tree_t *tree2);
  * @param stop The stopping location of the solve.
  * @return True if the maze was solved.
  */
-bool solveMaze(Maze_t maze, Point_t start, Point_t stop);
+bool solveMaze(Maze_t *maze, Point_t start, Point_t stop);
 
 /**@brief Solves a maze recursively and write the steps.
  *
@@ -153,7 +153,7 @@ bool solveMaze(Maze_t maze, Point_t start, Point_t stop);
  * @param stream The stream to write to.
  * @return True if the maze was solved.
  */
-bool solveMazeWithSteps(Maze_t maze, Point_t start, Point_t stop, FILE *stream);
+bool solveMazeWithSteps(Maze_t *maze, Point_t start, Point_t stop, FILE *stream);
 
 /**@brief Converts a grid of cells into a string.
  *
