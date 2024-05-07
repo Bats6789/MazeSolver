@@ -223,9 +223,12 @@ int main(int argc, char *argv[]) {
 
 	// solve maze
 	if (verbose_flag) {
-		solveMazeWithSteps(maze, start, stop, stepFile);
+		solveMazeWithSteps(&maze, start, stop, stepFile);
+		free(maze.str);
+		maze.str = graphToString(maze.cells, maze.width, maze.height);
+		fputs(maze.str, stepFile);
 	} else {
-		solveMaze(maze, start, stop);
+		solveMaze(&maze, start, stop);
 	}
 
 	// output the results
