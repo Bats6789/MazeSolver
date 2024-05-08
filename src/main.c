@@ -214,7 +214,7 @@ int main(int argc, char *argv[]) {
 		fclose(inFile);
 	} else {
 		maze = createMazeWH(width, height);
-		generateMaze(&maze);
+		generateMaze(&maze, kruskal);
 	}
 
 	// Find critical points

@@ -15,48 +15,116 @@
 #include <stdint.h>
 #include <stdio.h>
 
-typedef enum { up, down, left, right } Direction_t;
+/**@brief An Enum for keeping track of directions. */
+typedef enum {
+    up,   /**@brief The up direction. */
+    down, /**@brief The down direction. */
+    left, /**@brief The left direction. */
+    right /**@brief The right direction. */
+} Direction_t;
 
+/**@struct Point_t
+ * @brief A structure for points.
+ *
+ * @var Point_t::x
+ * The x value of the point.
+ *
+ * @var Point_t::y
+ * The y value of the point.
+ */
 typedef struct {
     uint32_t x;
     uint32_t y;
 } Point_t;
 
+/**@struct Edge_t
+ * @brief A structure for edges.
+ *
+ * @var Edge_t::point
+ * The start point of the edge.
+ *
+ * @var Edge_t::dir
+ * The direction the edge is traveling.
+ */
 typedef struct {
     Point_t point;
     Direction_t dir;
 } Edge_t;
 
+/**@struct Tree_t
+ * @brief A structure for Trees.
+ *
+ * @Var Tree_t::val
+ * The value of the current node.
+ *
+ * @var Tree_t::parent
+ * The address of the parent node.
+ *
+ * @var Tree_t::left
+ * The address of the left node.
+ *
+ * @var Tree_t::right
+ * The address of the right node.
+ */
 typedef struct Tree_t {
-	int val;
-	struct Tree_t *parent;
-	struct Tree_t *left;
-	struct Tree_t *right;
+    int val;
+    struct Tree_t *parent;
+    struct Tree_t *left;
+    struct Tree_t *right;
 } Tree_t;
 
+// clang-format off
+/**@struct Cell_t
+ * @brief A structure for Cells.
+ */
 typedef struct {
     union {
-        uint32_t walls;
+        /**@brief The value of all properties. */
+        uint32_t properties;
         struct {
-            unsigned blank : 24;
-			unsigned path : 1;
-			unsigned start : 1;
-			unsigned stop : 1;
-            unsigned visited : 1;
-            unsigned top : 1;
-            unsigned bottom : 1;
-            unsigned left : 1;
-            unsigned right : 1;
+            unsigned blank : 23;    /**@brief Empty space. */
+            unsigned observing : 1; /**@brief Is the cell under observation. */
+            unsigned path : 1;      /**@brief Is the cell a path to the solution. */
+            unsigned start : 1;     /**@brief Is the cell the start. */
+            unsigned stop : 1;      /**@brief Is the cell the stop path. */
+            unsigned visited : 1;   /**@brief Has the cell been visited. */
+            unsigned top : 1;       /**@brief Does the cell contain a wall at the top. */
+            unsigned bottom : 1;    /**@brief Does the cell contain a wall at the bottom. */
+            unsigned left : 1;      /**@brief Does the cell contain a wall to the left. */
+            unsigned right : 1;     /**@brief Does the cell contain a wall to the right. */
         };
     };
 } Cell_t;
+// clang-format on
 
+/**@struct Maze_t
+ * @brief A structure for Mazes.
+ *
+ * @var Maze_t::width
+ * The width of the maze.
+ *
+ * @var Maze_t::height
+ * The height of the maze.
+ *
+ * @var Maze_t::str
+ * The string representation of the maze.
+ *
+ * @var Maze_t:cells
+ * The cells of the maze.
+ */
 typedef struct {
     size_t width;
     size_t height;
     char *str;
     Cell_t *cells;
 } Maze_t;
+
+/**@brief The various kinds of generation algorithms. */
+typedef enum {
+    kruskal,          /**@brief The kruskal algorithm. */
+    prim,             /**@brief The Prim algorithm. */
+    INVALID_ALGORITHM /**@brief Invalid algorithm. */
+} genAlgo_t;
 
 /** @brief Creates a maze from a string
  *
@@ -153,7 +221,8 @@ bool solveMaze(Maze_t *maze, Point_t start, Point_t stop);
  * @param stream The stream to write to.
  * @return True if the maze was solved.
  */
-bool solveMazeWithSteps(Maze_t *maze, Point_t start, Point_t stop, FILE *stream);
+bool solveMazeWithSteps(Maze_t *maze, Point_t start, Point_t stop,
+                        FILE *stream);
 
 /**@brief Converts a grid of cells into a string.
  *
@@ -170,7 +239,7 @@ char *graphToString(Cell_t *cells, size_t width, size_t height);
  * @param maze The maze to write.
  * @return void
  */
-void fprintStep(FILE *stream, Maze_t *maze);
+void fprintStep(FILE *restrict stream, Maze_t *maze);
 
 /**@brief Frees a maze.
  *
@@ -185,9 +254,10 @@ void freeMaze(Maze_t maze);
  * This function works by removing walls until a completed maze is generated.
  *
  * @param maze The maze to manipulate.
+ * @param algorithm The algorithm used for generation.
  * @return void
  */
-void generateMaze(Maze_t *maze);
+void generateMaze(Maze_t *maze, genAlgo_t algorithm);
 
 /**@brief Generates a maze and writes the steps.
  *
@@ -196,10 +266,24 @@ void generateMaze(Maze_t *maze);
  * This function will write each time a wall is removed.
  *
  * @param maze The maze to manipulate.
+ * @param algorithm The algorithm used for generation.
  * @param stream The stream to write to.
  * @return void
  */
-void generateMazeWithSteps(Maze_t *maze, FILE *stream);
+void generateMazeWithSteps(Maze_t *maze, genAlgo_t algorithm,
+                           FILE *restrict stream);
+
+/**@brief Removes a node from the tree.
+ *
+ * The tree's head node will be replaced in the event that the
+ * head node is the node desired for removal. If a node is found,
+ * the node will be returned after removing.
+ *
+ * @param head The head of the tree.
+ * @param val The value of the node to remove.
+ * @return The removed node.
+ */
+Tree_t *removeNode(Tree_t **head, int val);
 
 /**@brief Join two trees together.
  *
@@ -208,5 +292,12 @@ void generateMazeWithSteps(Maze_t *maze, FILE *stream);
  * @return void
  */
 void joinTrees(Tree_t *head, Tree_t *node);
+
+/**@brief Convert a string to a algorithm.
+ *
+ * @param str The string to convert.
+ * @return The algorithm converted to.
+ */
+genAlgo_t strToGenAlgo(const char *str);
 
 #endif /* ifndef __MAZE_TOOLS_H__ */
