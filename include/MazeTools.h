@@ -132,9 +132,16 @@ typedef enum {
     eller,            /**@brief Eller's algorithm. */
     rDivide,          /**@brief Recursive Division algorithm. */
     sidewinder,       /**@brief Sidewinder algorithm. */
-	binaryTree,       /**@brief Binary Tree algorithm. */
+    binaryTree,       /**@brief Binary Tree algorithm. */
     INVALID_ALGORITHM /**@brief Invalid algorithm. */
 } genAlgo_t;
+
+/**@brief The various kinds of generation algorithms. */
+typedef enum {
+    depthFirst,    /**@brief Depth First algorithm. */
+    breadthFirst,    /**@brief Breadth First algorithm. */
+    INVALID_SOLVER /**@brief Invalid algorithm. */
+} solveAlgo_t;
 
 /** @brief Creates a maze from a string
  *
@@ -226,13 +233,43 @@ size_t pointToIndex(Point_t point, size_t width);
  */
 Point_t indexToPoint(size_t i, size_t width);
 
+/**@brief Determines if two points are the same.
+ *
+ * @param p1 The first point.
+ * @param p2 The second point.
+ * @return True if the x and y of two points are equal.
+ */
+bool pointEqual(Point_t p1, Point_t p2);
+
 /**@brief Provides a random direction to traverse.
+ *
+ * Note: This function assumes srand() was called prior to it.
  *
  * @param point The point to travel from.
  * @param maze The maze being traversed.
  * @return The direction to traverse.
  */
 Direction_t getRandomDirection(Point_t point, Maze_t maze);
+
+/**@brief Provides every direction traversable from a point randomly.
+ *
+ * Note: This function assumes srand() was called prior to it.
+ *
+ * @param point The point to travel from.
+ * @param maze The maze being traversed.
+ * @param dir The directions to traverse.
+ * @return The number of traversable directions.
+ */
+size_t getRandomDirections(Point_t point, Maze_t maze, Direction_t dir[4]);
+
+/**@brief Provides every direction from a point.
+ *
+ * @param point The point to start from.
+ * @param maze The maze being investigated.
+ * @param dir The directions to traverse.
+ * @return The number of traversable directions.
+ */
+size_t getValidDirections(Point_t point, Maze_t maze, Direction_t dir[4]);
 
 /**@brief Provides every direction traversable from a point.
  *
@@ -241,7 +278,7 @@ Direction_t getRandomDirection(Point_t point, Maze_t maze);
  * @param dir The directions to traverse.
  * @return The number of traversable directions.
  */
-size_t getRandomDirections(Point_t point, Maze_t maze, Direction_t dir[4]);
+size_t getValidTravelDirections(Point_t point, Maze_t maze, Direction_t dir[4]);
 
 /**@brief Gets the head of the tree.
  *
@@ -267,9 +304,11 @@ bool isSameTree(Tree_t *tree1, Tree_t *tree2);
  * @param maze The maze to solve.
  * @param start The starting location of the solve.
  * @param stop The stopping location of the solve.
+ * @param algorithm The algorithm to solve the maze.
  * @return True if the maze was solved.
  */
-bool solveMaze(Maze_t *maze, Point_t start, Point_t stop);
+bool solveMaze(Maze_t *maze, Point_t start, Point_t stop,
+               solveAlgo_t algorithm);
 
 /**@brief Solves a maze recursively and write the steps.
  *
@@ -281,10 +320,11 @@ bool solveMaze(Maze_t *maze, Point_t start, Point_t stop);
  * @param start The starting location of the solve.
  * @param stop The stopping location of the solve.
  * @param stream The stream for writing.
+ * @param algorithm The algorithm to solve the maze.
  * @return True if the maze was solved.
  */
 bool solveMazeWithSteps(Maze_t *maze, Point_t start, Point_t stop,
-                        FILE *stream);
+                        solveAlgo_t algorithm, FILE *stream);
 
 /**@brief Converts a grid of cells into a string.
  *
@@ -365,6 +405,8 @@ void joinTrees(Tree_t *head, Tree_t *node);
 
 /**@brief Assigns a random start and stop location in a maze.
  *
+ * Note: This function assumes srand() was called prior to it.
+ *
  * @param maze The maze to assign the points.
  */
 void assignRandomStartAndStop(Maze_t *maze);
@@ -373,6 +415,7 @@ void assignRandomStartAndStop(Maze_t *maze);
  *
  * Note: Only writes the start step. The stop step is left for the user to
  * determine when to write it.
+ * This function assumes srand() was called prior to it.
  *
  * @param maze The maze to assign the points.
  * @param stream The stream for writing.
@@ -385,5 +428,12 @@ void assignRandomStartAndStopWithSteps(Maze_t *maze, FILE *restrict stream);
  * @return The algorithm converted to.
  */
 genAlgo_t strToGenAlgo(const char *str);
+
+/**@brief Convert a string to a algorithm.
+ *
+ * @param str The string to convert.
+ * @return The algorithm converted to.
+ */
+solveAlgo_t strToSolveAlgo(const char *str);
 
 #endif /* ifndef __MAZE_TOOLS_H__ */

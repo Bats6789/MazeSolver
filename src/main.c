@@ -14,6 +14,7 @@
  *                              INCLUDES                                *
  ************************************************************************/
 // clang-format on
+#include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
 #include <stdarg.h>
@@ -89,26 +90,51 @@ int main(int argc, char *argv[]) {
     size_t width = DEFAULT_HEIGHT;
     Point_t start = {0, 0};
     Point_t stop = {0, 0};
+    char *userChoice = NULL;
     FILE *inFile = NULL;
     FILE *outFile = stdout;
     FILE *stepFile = NULL;
+	solveAlgo_t algorithm = INVALID_SOLVER;
+	bool foundAlgo = false;
 
     // clang-format off
 	static struct option long_opts[] = {
-		{"input", required_argument, NULL, 'i'},
-		{"quite", no_argument, &quite_flag, 1},
-		{"output", required_argument, NULL, 'o'},
-		{"verbose", optional_argument, NULL, 'v'},
+		{"algorithm", required_argument, NULL, 'a'},
 		{"help", no_argument, NULL, 'h'},
+		{"input", required_argument, NULL, 'i'},
+		{"output", required_argument, NULL, 'o'},
+		{"quite", no_argument, &quite_flag, 1},
+		{"verbose", optional_argument, NULL, 'v'},
 		{0, 0, 0, 0}
 	};
 	// clang format on
 
 	// parse user arguments
-	while ((opt = getopt_long(argc, argv, "hi:qo:v::", long_opts, &opts_index)) != -1) {
+	while ((opt = getopt_long(argc, argv, "a:hi:qo:v::", long_opts, &opts_index)) != -1) {
 		switch (opt) {
 			case 0: // long opt
 				break;
+
+            case 'a': {
+                size_t len = strlen(optarg);
+                userChoice = malloc(sizeof(*userChoice) * (len + 1));
+
+                for (size_t i = 0; i < len; i++) {
+                    userChoice[i] = tolower(optarg[i]);
+                }
+                userChoice[len] = '\0';
+            }
+
+                algorithm = strToSolveAlgo(userChoice);
+                if (algorithm == INVALID_SOLVER) {
+                    printError("ERROR: %s is not a valid algorithm\n", optarg);
+                    help();
+                    return EXIT_FAILURE;
+                } else {
+                    foundAlgo = true;
+                }
+                free(userChoice);
+                break;
 
 			case 'h':
 				help();
@@ -217,24 +243,22 @@ int main(int argc, char *argv[]) {
 		generateMaze(&maze, kruskal);
 	}
 
+	if (!foundAlgo) {
+		algorithm = depthFirst;
+	}
+
 	// Find critical points
 	start = findStart(maze);
 	stop = findStop(maze);
 
 	// solve maze
 	if (verbose_flag) {
-		solveMazeWithSteps(&maze, start, stop, stepFile);
-		free(maze.str);
-		maze.str = graphToString(maze.cells, maze.width, maze.height);
-		fputs(maze.str, stepFile);
+		solveMazeWithSteps(&maze, start, stop, algorithm, stepFile);
 	} else {
-		solveMaze(&maze, start, stop);
+		solveMaze(&maze, start, stop, algorithm);
 	}
 
 	// output the results
-	free(maze.str);
-	maze.str = graphToString(maze.cells, maze.width, maze.height);
-
 	fprintf(outFile, "%s", maze.str);
 
 	// cleanup
@@ -261,11 +285,16 @@ void help(void) {
 	puts("  MazeSolver [options] [W] [H]    Generates a maze of size WxH and solves it");
 	puts("");
 	puts("Options:");
+    puts("  -a, --algorithm <algorithm>     Specifies the algorithm");
 	puts("  -i <file>, --input <file>       Import a maze from <file>");
 	puts("  -q, --quite                     Silence all output");
 	puts("  -o <file>, --output <file>      Output solved maze to <file>");
 	puts("  -v [file], --verbose [file]     Send each step for solving to <file>");
 	puts("  -h, --help                      Print this message");
+    puts("");
+    puts("Algorithms:");
+    puts("  Depth (Depth First)");
+    puts("  Breadth (Breadth First)");
     // clang-format on
 }
 

@@ -23,6 +23,8 @@ add_library(MazeTools STATIC src/MazeTools.c
 								src/recursiveDivision.c
 								src/sidewinder.c
 								src/wilson.c
+								src/depthFirst.c
+								src/breadthFirst.c
 							)
 
 add_executable(MazeSolver src/main.c)

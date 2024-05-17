@@ -6,6 +6,8 @@
 #include "MazeTools.h"
 #include "aldous_broder.h"
 #include "binaryTree.h"
+#include "breadthFirst.h"
+#include "depthFirst.h"
 #include "eller.h"
 #include "growing_tree.h"
 #include "huntAndKill.h"
@@ -59,7 +61,7 @@ Maze_t createMaze(const char *str) {
                 maze.cells[i].path = 0;
             }
 
-			maze.cells[i].queued = str[strI] == 'Q' ? 1 : 0;
+            maze.cells[i].queued = str[strI] == 'Q' ? 1 : 0;
             maze.cells[i].observing = str[strI] == ':' ? 1 : 0;
 
             if (str[strI] == 'S' || str[strI] == 's') {
@@ -105,7 +107,7 @@ Maze_t createMazeWH(size_t width, size_t height) {
         maze.cells[i].visited = 0;
         maze.cells[i].path = 0;
         maze.cells[i].observing = 0;
-		maze.cells[i].queued = 0;
+        maze.cells[i].queued = 0;
     }
 
     return maze;
@@ -160,10 +162,10 @@ void mazeConnectCells(Maze_t *maze, size_t i1, size_t i2, Direction_t dir) {
 }
 
 void mazeBreakWall(Maze_t *maze, Point_t point, Direction_t dir) {
-	Point_t point2 = pointShift(point, dir);
-	size_t i1 = pointToIndex(point, maze->width);
-	size_t i2 = pointToIndex(point2, maze->width);
-	mazeConnectCells(maze, i1, i2, dir);
+    Point_t point2 = pointShift(point, dir);
+    size_t i1 = pointToIndex(point, maze->width);
+    size_t i2 = pointToIndex(point2, maze->width);
+    mazeConnectCells(maze, i1, i2, dir);
 }
 
 Point_t findStart(Maze_t maze) {
@@ -216,6 +218,10 @@ inline size_t pointToIndex(Point_t point, size_t width) {
 Point_t indexToPoint(size_t i, size_t width) {
     div_t division = div(i, width);
     return (Point_t){division.rem, division.quot};
+}
+
+bool pointEqual(Point_t p1, Point_t p2) {
+	return p1.x == p2.x && p1.y == p2.y;
 }
 
 Direction_t getRandomDirection(Point_t point, Maze_t maze) {
@@ -272,6 +278,51 @@ size_t getRandomDirections(Point_t point, Maze_t maze, Direction_t dir[4]) {
     return dirSz;
 }
 
+size_t getValidDirections(Point_t point, Maze_t maze, Direction_t dir[4]) {
+    size_t dirSz = 0;
+
+    if (point.x > 0) {
+        dir[dirSz++] = left;
+    }
+
+    if (point.x < maze.width - 1) {
+        dir[dirSz++] = right;
+    }
+
+    if (point.y > 0) {
+        dir[dirSz++] = up;
+    }
+
+    if (point.y < maze.height - 1) {
+        dir[dirSz++] = down;
+    }
+
+    return dirSz;
+}
+
+size_t getValidTravelDirections(Point_t point, Maze_t maze, Direction_t dir[4]) {
+    size_t dirSz = 0;
+	size_t index = pointToIndex(point, maze.width);
+
+    if (point.x > 0 && !maze.cells[index].left) {
+        dir[dirSz++] = left;
+    }
+
+    if (point.x < maze.width - 1 && !maze.cells[index].right) {
+        dir[dirSz++] = right;
+    }
+
+    if (point.y > 0 && !maze.cells[index].top) {
+        dir[dirSz++] = up;
+    }
+
+    if (point.y < maze.height - 1 && !maze.cells[index].bottom) {
+        dir[dirSz++] = down;
+    }
+
+    return dirSz;
+}
+
 Tree_t *getHead(Tree_t *tree) {
     if (!tree) return tree;
 
@@ -290,105 +341,47 @@ bool isSameTree(Tree_t *tree1, Tree_t *tree2) {
     return tree1->val == tree2->val;
 }
 
-bool solveMaze(Maze_t *maze, Point_t start, Point_t stop) {
-    size_t i = pointToIndex(start, maze->width);
-
-    maze->cells[i].visited = 1;
-
-    if (start.x == stop.x && start.y == stop.y) {
-        maze->cells[i].path = 1;
-        return true;
-    }
-
-    if (start.y > 0 && maze->cells[i].top == 0 &&
-        maze->cells[i - maze->width].visited == 0) {
-        if (solveMaze(maze, (Point_t){start.x, start.y - 1}, stop)) {
-            maze->cells[i].path = 1;
-            return true;
+bool solveMaze(Maze_t *maze, Point_t start, Point_t stop,
+               solveAlgo_t algorithm) {
+    bool state = false;
+    switch (algorithm) {
+        case depthFirst:
+            state = depthFirstSolve(maze, start, stop);
+			if (maze->str) {
+				free(maze->str);
+			}
+			maze->str = graphToString(maze->cells, maze->width, maze->height);
+            break;
+        case breadthFirst:
+            state = breadthFirstSolve(maze, start, stop);
+          break;
+        case INVALID_SOLVER:
+            break;
         }
-    }
 
-    if (start.y < maze->height - 1 && maze->cells[i].bottom == 0 &&
-        maze->cells[i + maze->width].visited == 0) {
-        if (solveMaze(maze, (Point_t){start.x, start.y + 1}, stop)) {
-            maze->cells[i].path = 1;
-            return true;
-        }
-    }
-
-    if (start.x > 0 && maze->cells[i].left == 0 &&
-        maze->cells[i - 1].visited == 0) {
-        if (solveMaze(maze, (Point_t){start.x - 1, start.y}, stop)) {
-            maze->cells[i].path = 1;
-            return true;
-        }
-    }
-
-    if (start.x < maze->width - 1 && maze->cells[i].right == 0 &&
-        maze->cells[i + 1].visited == 0) {
-        if (solveMaze(maze, (Point_t){start.x + 1, start.y}, stop)) {
-            maze->cells[i].path = 1;
-            return true;
-        }
-    }
-
-    return false;
+    return state;
 }
 
 bool solveMazeWithSteps(Maze_t *maze, Point_t start, Point_t stop,
-                        FILE *stream) {
-    size_t i = pointToIndex(start, maze->width);
-
-    maze->cells[i].visited = 1;
-    fprintStep(stream, maze);
-
-    if (start.x == stop.x && start.y == stop.y) {
-        maze->cells[i].path = 1;
-        fprintStep(stream, maze);
-        return true;
-    }
-
-    if (start.y > 0 && maze->cells[i].top == 0 &&
-        maze->cells[i - maze->width].visited == 0) {
-        if (solveMazeWithSteps(maze, (Point_t){start.x, start.y - 1}, stop,
-                               stream)) {
-            maze->cells[i].path = 1;
-            fprintStep(stream, maze);
-            return true;
+                        solveAlgo_t algorithm, FILE *stream) {
+    bool state = false;
+    switch (algorithm) {
+        case depthFirst:
+            state = depthFirstSolveWithSteps(maze, start, stop, stream);
+			if (maze->str) {
+				free(maze->str);
+			}
+			maze->str = graphToString(maze->cells, maze->width, maze->height);
+			fputs(maze->str, stream);
+            break;
+        case breadthFirst:
+            state = breadthFirstSolveWithSteps(maze, start, stop, stream);
+          break;
+        case INVALID_SOLVER:
+            break;
         }
-    }
 
-    if (start.y < maze->height - 1 && maze->cells[i].bottom == 0 &&
-        maze->cells[i + maze->width].visited == 0) {
-        if (solveMazeWithSteps(maze, (Point_t){start.x, start.y + 1}, stop,
-                               stream)) {
-            maze->cells[i].path = 1;
-            fprintStep(stream, maze);
-            return true;
-        }
-    }
-
-    if (start.x > 0 && maze->cells[i].left == 0 &&
-        maze->cells[i - 1].visited == 0) {
-        if (solveMazeWithSteps(maze, (Point_t){start.x - 1, start.y}, stop,
-                               stream)) {
-            maze->cells[i].path = 1;
-            fprintStep(stream, maze);
-            return true;
-        }
-    }
-
-    if (start.x < maze->width - 1 && maze->cells[i].right == 0 &&
-        maze->cells[i + 1].visited == 0) {
-        if (solveMazeWithSteps(maze, (Point_t){start.x + 1, start.y}, stop,
-                               stream)) {
-            maze->cells[i].path = 1;
-            fprintStep(stream, maze);
-            return true;
-        }
-    }
-
-    return false;
+    return state;
 }
 
 static char getCellPathChar(Cell_t cell1, Cell_t cell2) {
@@ -472,9 +465,9 @@ char *graphToString(Cell_t *cells, size_t width, size_t height) {
                 str[strI + 1] = getCellPathChar(cells[i], cells[i + 1]);
             }
 
-			if (cells[i].queued) {
-				str[strI] = cells[i].visited == 1 ? 'q' : 'Q';
-			}
+            if (cells[i].queued) {
+                str[strI] = cells[i].visited == 1 ? 'q' : 'Q';
+            }
 
             if (cells[i].observing) {
                 str[strI] = ':';
@@ -560,18 +553,18 @@ void generateMaze(Maze_t *maze, genAlgo_t algorithm) {
         case wilson:
             wilsonGen(maze);
             break;
-		case eller:
-			ellerGen(maze);
-			break;
-		case rDivide:
-			recursiveDivisionGen(maze);
-			break;
-		case sidewinder:
-			sidewinderGen(maze);
-			break;
-		case binaryTree:
-			binaryTreeGen(maze, southWestTree);
-			break;
+        case eller:
+            ellerGen(maze);
+            break;
+        case rDivide:
+            recursiveDivisionGen(maze);
+            break;
+        case sidewinder:
+            sidewinderGen(maze);
+            break;
+        case binaryTree:
+            binaryTreeGen(maze, southWestTree);
+            break;
         case INVALID_ALGORITHM:
             break;
     }
@@ -601,18 +594,18 @@ void generateMazeWithSteps(Maze_t *maze, genAlgo_t algorithm,
         case wilson:
             wilsonGenWithSteps(maze, stream);
             break;
-		case eller:
-			ellerGenWithSteps(maze, stream);
-			break;
-		case rDivide:
-			recursiveDivisionGenWithSteps(maze, stream);
-			break;
-		case sidewinder:
-			sidewinderGenWithSteps(maze, stream);
-			break;
-		case binaryTree:
-			binaryTreeGenWithSteps(maze, southWestTree, stream);
-			break;
+        case eller:
+            ellerGenWithSteps(maze, stream);
+            break;
+        case rDivide:
+            recursiveDivisionGenWithSteps(maze, stream);
+            break;
+        case sidewinder:
+            sidewinderGenWithSteps(maze, stream);
+            break;
+        case binaryTree:
+            binaryTreeGenWithSteps(maze, southWestTree, stream);
+            break;
         case INVALID_ALGORITHM:
             break;
     }
@@ -784,21 +777,32 @@ genAlgo_t strToGenAlgo(const char *str) {
         return wilson;
     }
 
-	if (strcmp(str, "eller") == 0) {
-		return eller;
-	}
+    if (strcmp(str, "eller") == 0) {
+        return eller;
+    }
 
-	if (strcmp(str, "divide") == 0) {
-		return rDivide;
-	}
+    if (strcmp(str, "divide") == 0) {
+        return rDivide;
+    }
 
-	if (strcmp(str, "sidewinder") == 0) {
-		return sidewinder;
-	}
+    if (strcmp(str, "sidewinder") == 0) {
+        return sidewinder;
+    }
 
-	if (strcmp(str, "binary-tree") == 0) {
-		return binaryTree;
-	}
+    if (strcmp(str, "binary-tree") == 0) {
+        return binaryTree;
+    }
 
     return INVALID_ALGORITHM;
+}
+
+solveAlgo_t strToSolveAlgo(const char *str) {
+	if (strcmp(str, "depth") == 0) {
+		return depthFirst;
+	}
+
+	if (strcmp(str, "breadth") == 0) {
+		return breadthFirst;
+	}
+	return INVALID_SOLVER;
 }
