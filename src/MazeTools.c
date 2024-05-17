@@ -1,13 +1,16 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 #include "MazeTools.h"
+#include "aStar.h"
 #include "aldous_broder.h"
 #include "binaryTree.h"
 #include "breadthFirst.h"
 #include "depthFirst.h"
+#include "dijkstra.h"
 #include "eller.h"
 #include "growing_tree.h"
 #include "huntAndKill.h"
@@ -224,6 +227,18 @@ bool pointEqual(Point_t p1, Point_t p2) {
 	return p1.x == p2.x && p1.y == p2.y;
 }
 
+double euclidDistance(Point_t p1, Point_t p2) {
+	double difx = (double)p1.x - (double)p2.x;
+	double dify = (double)p1.y - (double)p2.y;
+	return sqrt(pow(difx, 2) + pow(dify, 2));
+}
+
+uint64_t manhattenDistance(Point_t p1, Point_t p2) {
+	uint64_t difx = p1.x > p2.x ? p1.x - p2.x : p2.x - p1.x;
+	uint64_t dify = p1.y > p2.y ? p1.y - p2.y : p2.y - p1.y;
+	return difx + dify;
+}
+
 Direction_t getRandomDirection(Point_t point, Maze_t maze) {
     Direction_t dir[4];
     size_t dirSz = 0;
@@ -355,6 +370,12 @@ bool solveMaze(Maze_t *maze, Point_t start, Point_t stop,
         case breadthFirst:
             state = breadthFirstSolve(maze, start, stop);
           break;
+		case dijkstra:
+            state = dijkstraSolve(maze, start, stop);
+			break;
+		case aStar:
+            state = aStarSolve(maze, start, stop);
+			break;
         case INVALID_SOLVER:
             break;
         }
@@ -377,6 +398,12 @@ bool solveMazeWithSteps(Maze_t *maze, Point_t start, Point_t stop,
         case breadthFirst:
             state = breadthFirstSolveWithSteps(maze, start, stop, stream);
           break;
+        case dijkstra:
+            state = dijkstraSolveWithSteps(maze, start, stop, stream);
+			break;
+        case aStar:
+            state = aStarSolveWithSteps(maze, start, stop, stream);
+			break;
         case INVALID_SOLVER:
             break;
         }
@@ -804,5 +831,14 @@ solveAlgo_t strToSolveAlgo(const char *str) {
 	if (strcmp(str, "breadth") == 0) {
 		return breadthFirst;
 	}
+
+	if (strcmp(str, "dijkstra") == 0) {
+		return dijkstra;
+	}
+
+	if (strcmp(str, "a-star") == 0) {
+		return aStar;
+	}
+
 	return INVALID_SOLVER;
 }

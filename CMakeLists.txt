@@ -25,6 +25,8 @@ add_library(MazeTools STATIC src/MazeTools.c
 								src/wilson.c
 								src/depthFirst.c
 								src/breadthFirst.c
+								src/dijkstra.c
+								src/aStar.c
 							)
 
 add_executable(MazeSolver src/main.c)

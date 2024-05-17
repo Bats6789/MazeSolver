@@ -295,6 +295,8 @@ void help(void) {
     puts("Algorithms:");
     puts("  Depth (Depth First)");
     puts("  Breadth (Breadth First)");
+	puts("  Dijkstra");
+	puts("  A-Star");
     // clang-format on
 }
 

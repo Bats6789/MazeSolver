@@ -139,7 +139,9 @@ typedef enum {
 /**@brief The various kinds of generation algorithms. */
 typedef enum {
     depthFirst,    /**@brief Depth First algorithm. */
-    breadthFirst,    /**@brief Breadth First algorithm. */
+    breadthFirst,  /**@brief Breadth First algorithm. */
+    dijkstra,      /**@brief Dijkstra algorithm. */
+    aStar,         /**@brief Dijkstra algorithm. */
     INVALID_SOLVER /**@brief Invalid algorithm. */
 } solveAlgo_t;
 
@@ -240,6 +242,22 @@ Point_t indexToPoint(size_t i, size_t width);
  * @return True if the x and y of two points are equal.
  */
 bool pointEqual(Point_t p1, Point_t p2);
+
+/**@brief Determines the euclid distance between two points.
+ *
+ * @param p1 The first point.
+ * @param p2 The second point.
+ * @return The euclid difference between them.
+ */
+double euclidDistance(Point_t p1, Point_t p2);
+
+/**@brief Determines the manhatten distance between two points.
+ *
+ * @param p1 The first point.
+ * @param p2 The second point.
+ * @return The manhatten difference between them.
+ */
+uint64_t manhattenDistance(Point_t p1, Point_t p2);
 
 /**@brief Provides a random direction to traverse.
  *
