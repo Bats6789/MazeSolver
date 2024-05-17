@@ -25,14 +25,11 @@ void primGen(Maze_t *maze) {
     size_t sz = maze->width * maze->height;
     size_t startI;
     ssize_t frontierSz = 0;
+    Point_t cellPt;
     Tree_t *trees = malloc(sizeof(*trees) * sz);
     Tree_t *frontiers = malloc(sizeof(*trees) * sz);
-    Point_t start, stop, cellPt;
-    div_t division;
 
     for (size_t i = 0; i < sz; i++) {
-        // div_t division = div(i, maze->width);
-        // Point_t pt = {division.rem, division.quot};
         trees[i] = (Tree_t){i, NULL, NULL, NULL};
     }
 
@@ -42,9 +39,7 @@ void primGen(Maze_t *maze) {
     startI = rand() % sz;
 
     // Get initial frontiers
-    division = div(startI, maze->width);
-    cellPt.x = division.rem;
-    cellPt.y = division.quot;
+	cellPt = indexToPoint(startI, maze->width);
 
     if (cellPt.x > 0) {
         frontiers[frontierSz++] = trees[startI - 1];
@@ -70,10 +65,9 @@ void primGen(Maze_t *maze) {
         size_t potSz = 0;
         size_t randPotCellI = 0;
         Point_t cellPt2 = {0, 0};
+		Direction_t dir;
 
-        division = div(frontierI, maze->width);
-        cellPt.x = division.rem;
-        cellPt.y = division.quot;
+		cellPt = indexToPoint(frontierI, maze->width);
 
         // find cells in maze adjacent to the current frontier cell
         if (cellPt.x > 0) {
@@ -124,27 +118,16 @@ void primGen(Maze_t *maze) {
         randPotCellI = potCells[rand() % potSz].val;
 
         // join edges
-        division = div(randPotCellI, maze->width);
-        cellPt2.x = division.rem;
-        cellPt2.y = division.quot;
+		cellPt2 = indexToPoint(randPotCellI, maze->width);
+
 
         if (cellPt.x != cellPt2.x) {
-            if (cellPt.x > cellPt2.x) {
-                maze->cells[frontierI].left = 0;
-                maze->cells[randPotCellI].right = 0;
-            } else {
-                maze->cells[frontierI].right = 0;
-                maze->cells[randPotCellI].left = 0;
-            }
+			dir = cellPt.x > cellPt2.x ? left : right;
         } else {
-            if (cellPt.y > cellPt2.y) {
-                maze->cells[frontierI].top = 0;
-                maze->cells[randPotCellI].bottom = 0;
-            } else {
-                maze->cells[frontierI].bottom = 0;
-                maze->cells[randPotCellI].top = 0;
-            }
+			dir = cellPt.y > cellPt2.y ? up : down;
         }
+
+		mazeConnectCells(maze, frontierI, randPotCellI, dir);
 
         joinTrees(trees + startI, trees + frontierI);
 
@@ -155,31 +138,11 @@ void primGen(Maze_t *maze) {
         frontierSz--;
     }
 
-    // assign start and stop location
-    if (rand() % 2 == 0) {
-        start.x = rand() % maze->width;
-        stop.x = rand() % maze->width;
-        if (rand() % 2 == 0) {
-            start.y = 0;
-            stop.y = maze->height - 1;
-        } else {
-            start.y = maze->height - 1;
-            stop.y = 0;
-        }
-    } else {
-        start.y = rand() % maze->height;
-        stop.y = rand() % maze->height;
-        if (rand() % 2 == 0) {
-            start.x = 0;
-            stop.x = maze->width - 1;
-        } else {
-            start.x = maze->width - 1;
-            stop.x = 0;
-        }
-    }
+	free(trees);
+	free(frontiers);
 
-    maze->cells[start.y * maze->width + start.x].start = 1;
-    maze->cells[stop.y * maze->width + stop.x].stop = 1;
+    // assign start and stop location
+	assignRandomStartAndStop(maze);
 
     // stringify
     maze->str = graphToString(maze->cells, maze->width, maze->height);
@@ -189,14 +152,11 @@ void primGenWithSteps(Maze_t *maze, FILE *restrict stream) {
     size_t sz = maze->width * maze->height;
     size_t startI;
     ssize_t frontierSz = 0;
+    Point_t cellPt;
     Tree_t *trees = malloc(sizeof(*trees) * sz);
     Tree_t *frontiers = malloc(sizeof(*trees) * sz);
-    Point_t start, stop, cellPt;
-    div_t division;
 
     for (size_t i = 0; i < sz; i++) {
-        // div_t division = div(i, maze->width);
-        // Point_t pt = {division.rem, division.quot};
         trees[i] = (Tree_t){i, NULL, NULL, NULL};
     }
 
@@ -206,9 +166,7 @@ void primGenWithSteps(Maze_t *maze, FILE *restrict stream) {
     startI = rand() % sz;
 
     // Get initial frontiers
-    division = div(startI, maze->width);
-    cellPt.x = division.rem;
-    cellPt.y = division.quot;
+	cellPt = indexToPoint(startI, maze->width);
 
     if (cellPt.x > 0) {
         frontiers[frontierSz++] = trees[startI - 1];
@@ -240,10 +198,9 @@ void primGenWithSteps(Maze_t *maze, FILE *restrict stream) {
         size_t potSz = 0;
         size_t randPotCellI = 0;
         Point_t cellPt2 = {0, 0};
+		Direction_t dir;
 
-        division = div(frontierI, maze->width);
-        cellPt.x = division.rem;
-        cellPt.y = division.quot;
+		cellPt = indexToPoint(frontierI, maze->width);
 
         // find cells in maze adjacent to the current frontier cell
         if (cellPt.x > 0) {
@@ -298,27 +255,15 @@ void primGenWithSteps(Maze_t *maze, FILE *restrict stream) {
         randPotCellI = potCells[rand() % potSz].val;
 
         // join edges
-        division = div(randPotCellI, maze->width);
-        cellPt2.x = division.rem;
-        cellPt2.y = division.quot;
+		cellPt2 = indexToPoint(randPotCellI, maze->width);
 
         if (cellPt.x != cellPt2.x) {
-            if (cellPt.x > cellPt2.x) {
-                maze->cells[frontierI].left = 0;
-                maze->cells[randPotCellI].right = 0;
-            } else {
-                maze->cells[frontierI].right = 0;
-                maze->cells[randPotCellI].left = 0;
-            }
+			dir = cellPt.x > cellPt2.x ? left : right;
         } else {
-            if (cellPt.y > cellPt2.y) {
-                maze->cells[frontierI].top = 0;
-                maze->cells[randPotCellI].bottom = 0;
-            } else {
-                maze->cells[frontierI].bottom = 0;
-                maze->cells[randPotCellI].top = 0;
-            }
+			dir = cellPt.y > cellPt2.y ? up : down;
         }
+
+		mazeConnectCells(maze, frontierI, randPotCellI, dir);
         maze->cells[frontierI].observing = 0;
 
         joinTrees(trees + startI, trees + frontierI);
@@ -332,32 +277,11 @@ void primGenWithSteps(Maze_t *maze, FILE *restrict stream) {
         frontierSz--;
     }
 
-    // assign start and stop location
-    if (rand() % 2 == 0) {
-        start.x = rand() % maze->width;
-        stop.x = rand() % maze->width;
-        if (rand() % 2 == 0) {
-            start.y = 0;
-            stop.y = maze->height - 1;
-        } else {
-            start.y = maze->height - 1;
-            stop.y = 0;
-        }
-    } else {
-        start.y = rand() % maze->height;
-        stop.y = rand() % maze->height;
-        if (rand() % 2 == 0) {
-            start.x = 0;
-            stop.x = maze->width - 1;
-        } else {
-            start.x = maze->width - 1;
-            stop.x = 0;
-        }
-    }
+	free(trees);
+	free(frontiers);
 
-    maze->cells[start.y * maze->width + start.x].start = 1;
-    fprintStep(stream, maze);
-    maze->cells[stop.y * maze->width + stop.x].stop = 1;
+    // assign start and stop location
+	assignRandomStartAndStopWithSteps(maze, stream);
 
     // stringify
     maze->str = graphToString(maze->cells, maze->width, maze->height);
