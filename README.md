@@ -10,7 +10,7 @@ mkdir build
 mkdir lib
 mkdir bin
 cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release
+cmake --build build
 ```
 The compiled program will be found in **bin**.
 
