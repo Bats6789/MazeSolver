@@ -10,6 +10,7 @@
 #define __DIJKSTRA_H__
 
 #include <stdio.h>
+#include <limits.h>
 
 #include "MazeTools.h"
 
