@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include "MazeTools.h"
+#include "recursiveBacktracking.h"
 
 static void recursive(Maze_t *maze, Point_t point) {
     Direction_t dir[4];
@@ -13,7 +14,7 @@ static void recursive(Maze_t *maze, Point_t point) {
 
     for (size_t i = 0; i < dirSz; i++) {
         Point_t newPoint = pointShift(point, dir[i]);
-        size_t newIndex = pointToIndex(point, maze->width);
+        size_t newIndex = pointToIndex(newPoint, maze->width);
         if (!maze->cells[newIndex].visited) {
 			mazeConnectCells(maze, index, newIndex, dir[i]);
             maze->cells[newIndex].visited = 1;
@@ -34,7 +35,7 @@ static void recursiveWithSteps(Maze_t *maze, Point_t point,
 
     for (size_t i = 0; i < dirSz; i++) {
         Point_t newPoint = pointShift(point, dir[i]);
-        size_t newIndex = pointToIndex(point, maze->width);
+        size_t newIndex = pointToIndex(newPoint, maze->width);
         if (!maze->cells[newIndex].visited) {
 			mazeConnectCells(maze, index, newIndex, dir[i]);
             maze->cells[newIndex].visited = 1;

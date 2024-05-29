@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "huntAndKill.h"
 #include "MazeTools.h"
 
 static Point_t hunt(Maze_t *maze) {
