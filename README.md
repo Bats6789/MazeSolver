@@ -129,7 +129,7 @@ This is an example of four cells in a 2x2 formation:
 #3 4#
 #####
 ```
-Notice that for a maze of size MxN, it takes (2*M+1)x(2*N+1) characters
+Notice that for a maze of size MxN, it takes $(2M+1)\times(2N+1)$ characters
 to store the maze.
 
 ## TODO
